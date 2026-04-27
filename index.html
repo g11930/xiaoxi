@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国际物流 · 卡片式仪表板（全功能+红字备注）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            padding: 30px 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* 头部卡片 */
+        .header-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px 32px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            border: 1px solid #f0f0f0;
+        }
+        .logo-area h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0b1b33;
+        }
+        .logo-area span {
+            font-size: 14px;
+            color: #6b7a8f;
+            margin-top: 4px;
+            display: block;
+        }
+        .date-badge {
+            background: #f0f5fe;
+            padding: 10px 22px;
+            border-radius: 60px;
+            color: #1e4e7a;
+            font-weight: 500;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #d9e6f7;
+        }
+        /* 时钟样式 */
+        .live-clock {
+            background: #1d4e89;
+            color: white;
+            border-radius: 40px;
+            padding: 6px 18px;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,40,80,0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 功能卡片网格 */
+        .func-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 14px;
+        }
+        .func-card {
+            background: white;
+            border-radius: 20px;
+            padding: 18px 8px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            border: 1px solid #edf2f7;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .func-card:hover {
+            transform: translateY(-4px);
+            border-color: #cbd5e1;
+            box-shadow: 0 12px 24px -8px rgba(20, 80, 150, 0.15);
+            background: #fafdff;
+        }
+        .func-emoji {
+            font-size: 28px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .func-card span {
+            font-weight: 500;
+            color: #1e2f4d;
+            font-size: 15px;
+        }
+
+        /* 邮政编码子按钮组 */
+        .zip-subgroup {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .zip-subcard {
+            background: #eef3fa;
+            border-radius: 40px;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d4e7c;
+            cursor: pointer;
+            border: 1px solid #bdd6ed;
+        }
+        .zip-subcard:hover {
+            background: #d4e3fc;
+        }
+
+        /* 主内容两列布局 */
+        .row-split {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 24px;
+        }
+
+        /* 左侧大列 */
+        .left-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* 项目卡片 - 数字可编辑 */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .project-card {
+            background: white;
+            border-radius: 24px;
+            padding: 22px 18px;
+            border: 1px solid #f0f0f0;
+        }
+        .project-category {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f3a68;
+            margin-bottom: 4px;
+        }
+        .project-count {
+            font-size: 32px;
+            font-weight: 700;
+            color: #102a44;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+        .project-count span[contenteditable="true"] {
+            display: inline-block;
+            min-width: 60px;
+            padding: 0 4px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            outline: 1px dashed #7a9bcb;
+        }
+        .project-count small {
+            font-size: 15px;
+            font-weight: 400;
+            color: #7a8b9f;
+            margin-left: 6px;
+        }
+        .view-link {
+            color: #3874b6;
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+        }
+        .view-link:hover {
+            border-bottom-color: #3874b6;
+        }
+
+        /* 渠道卡片 (完整表格切换) */
+        .channel-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid #edf2f9;
+        }
+        .channel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .channel-header h3 {
+            color: #112b46;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .channel-tab-group {
+            display: flex;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 40px;
+        }
+        .channel-tab {
+            padding: 6px 18px;
+            border-radius: 30px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 500;
+            color: #3d5775;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .channel-tab.active {
+            background: white;
+            color: #1d4e89;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 16px;
+            background: #f9fcff;
+        }
+        .channel-table {
+            display: none;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 500px;
+        }
+        .channel-table.active-table {
+            display: table;
+        }
+        th {
+            text-align: left;
+            padding: 14px 12px;
+            background: #e9f0f8;
+            color: #1c3b5c;
+            font-weight: 600;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee8f2;
+            color: #234569;
+        }
+        /* 备注列样式：红色大字 */
+        td:last-child {
+            color: #e53e3e !important;
+            font-size: 15px !important;
+            font-weight: 500 !important;
+        }
+        .copy-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .trans-text {
+            background: #ffffff;
+            padding: 5px 10px;
+            border-radius: 40px;
+            border: 1px solid #d4e0ec;
+            font-size: 13px;
+            min-width: 180px;
+        }
+        .copy-btn {
+            background: #e2eaf3;
+            border: none;
+            border-radius: 30px;
+            padding: 4px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #1d446b;
+        }
+        .copy-btn:hover {
+            background: #cbddf2;
+        }
+
+        /* 右侧卡片 - 日历 (可点击切换) */
+        .calendar-card {
+            background: white;
+            border-radius: 24px;
+            padding: 22px;
+            border: 1px solid #edf2f8;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .calendar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #142a44;
+        }
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+        .calendar-nav button {
+            background: #eef3fa;
+            border: none;
+            border-radius: 20px;
+            padding: 4px 12px;
+            cursor: pointer;
+            color: #1d4e89;
+            font-weight: 500;
+        }
+        .calendar-nav button:hover {
+            background: #d4e3fc;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .weekday {
+            color: #6b7f9a;
+            font-weight: 500;
+            padding: 8px 0;
+        }
+        .calendar-day {
+            padding: 8px 4px;
+            border-radius: 10px;
+            background: #f8fafd;
+            color: #234569;
+            cursor: pointer;
+        }
+        .calendar-day.today {
+            background: #1d4e89;
+            color: white;
+            font-weight: 500;
+        }
+        .calendar-day.event {
+            border: 2px solid #409eff;
+            background: #ecf5ff;
+        }
+        .schedule-card {
+            background: white;
+            border-radius: 24px;
+            padding: 22px;
+            border: 1px solid #edf2f8;
+        }
+        .schedule-hours {
+            display: flex;
+            gap: 12px;
+            font-size: 13px;
+            color: #3a5c7c;
+            margin: 16px 0 20px;
+            flex-wrap: wrap;
+        }
+        .schedule-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #e2eaf2;
+        }
+        .schedule-item:last-child {
+            border-bottom: none;
+        }
+        .event-badge {
+            background: #e8f0fd;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        /* ===== 弹窗样式 ===== */
+        .func-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            z-index: 9999;
+            max-width: 800px;
+            width: 95%;
+            display: none;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .func-modal.show {
+            display: block;
+        }
+        .modal-title {
+            color: #2c3e50;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .modal-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #34495e;
+            white-space: pre-line;
+        }
+        .exception-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e6e9ed;
+        }
+        .exception-title {
+            font-weight: 600;
+            color: #2980b9;
+            font-size: 17px;
+            margin-bottom: 8px;
+        }
+        .close-modal {
+            margin-top: 25px;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #2980b9;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .modal-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 9998;
+            display: none;
+            backdrop-filter: blur(3px);
+        }
+        .modal-mask.show {
+            display: block;
+        }
+
+        /* 插图弹窗 */
+        #illustration-modal {
+            max-width: 1200px;
+            width: 98%;
+            max-height: 90vh;
+            padding: 0;
+            overflow: hidden;
+        }
+        .illustration-container {
+            display: flex;
+            width: 100%;
+            height: 85vh;
+            overflow: hidden;
+        }
+        .illustration-left {
+            flex: 1;
+            padding: 30px;
+            border-right: 1px solid #eee;
+            overflow-y: auto;
+        }
+        .illustration-right {
+            width: 420px;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .drop-area {
+            border: 2px dashed #409eff;
+            border-radius: 8px;
+            padding: 60px 20px;
+            text-align: center;
+            color: #666;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .drop-area.dragover {
+            background: #ecf5ff;
+        }
+        .illustration-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #409eff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 0 5px;
+        }
+        .clear-btn {
+            background: #f56c6c;
+        }
+        .start-btn {
+            background: #409eff;
+            color: white;
+        }
+        .export-btn {
+            background: #67c23a;
+            color: white;
+        }
+        #preview-container {
+            margin-top: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+        }
+        #preview-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        #preview-table td {
+            border: 1px solid #ddd;
+            padding: 0;
+            text-align: center;
+            vertical-align: middle;
+        }
+        #preview-table img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* 进度条 */
+        #progress-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+        }
+        .progress-container {
+            width: 400px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #409eff;
+            width: 0%;
+        }
+        .back-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 40px;
+            background-color: #1d3e63;
+            color: white;
+            cursor: pointer;
+            display: none;
+            z-index: 999;
+        }
+    </style>
+    <!-- 引入ExcelJS和FileSaver -->
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- 头部卡片 带时钟 -->
+        <div class="header-card">
+            <div class="logo-area">
+                <h1>小东</h1>
+                <span>学又学不会，睡又睡不着，干又干不完</span>
+            </div>
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div class="live-clock" id="liveClock">⏱️ 加载中...</div>
+                <div class="date-badge">📅 23周一 · 24周二 · 25周三</div>
+            </div>
+        </div>
+
+        <!-- 功能卡片网格 -->
+        <div class="func-grid">
+            <div class="func-card" id="trans-order"><span class="func-emoji">📦</span><span>转单</span></div>
+            <div class="func-card" id="zip-search"><span class="func-emoji">📍</span><span>邮政编码查询</span></div>
+            <div class="func-card" id="channel-search"><span class="func-emoji">🔀</span><span>渠道查询</span></div>
+            <div class="func-card" id="name-register"><span class="func-emoji">📋</span><span>异常登记</span></div>
+            <div class="func-card" id="recheck"><span class="func-emoji">📐</span><span>复测</span></div>
+            <div class="func-card" id="check-arrival"><span class="func-emoji">📦📦</span><span>其他客户到货量</span></div>
+            <div class="func-card" id="exception-type"><span class="func-emoji">⚠️</span><span>异常类型</span></div>
+            <div class="func-card" id="illustration"><span class="func-emoji">🖼️</span><span>插图</span></div>
+            
+            <!-- 邮政编码子按钮组 -->
+            <div class="zip-subgroup" id="zip-subgroup" style="display: none;">
+                <div class="zip-subcard" id="zip-btn1">🇦🇺 澳洲地址查询</div>
+                <div class="zip-subcard" id="zip-btn2">🇫🇷 法国邮编查询</div>
+            </div>
+        </div>
+
+        <!-- 主内容两列布局 -->
+        <div class="row-split">
+            <!-- 左侧列 -->
+            <div class="left-stack">
+                <!-- 项目卡片区域 (数字可编辑) -->
+                <div class="project-grid">
+                    <div class="project-card">
+                        <div class="project-category">问题</div>
+                        <div class="project-count"><span contenteditable="true">0</span> <small>个项目</small></div>
+                        <a href="#" class="view-link">查看全部 →</a>
+                    </div>
+                    <div class="project-card">
+                        <div class="project-category">数据</div>
+                        <div class="project-count"><span contenteditable="true">1314</span> <small>个项目</small></div>
+                        <a href="#" class="view-link">查看全部 →</a>
+                    </div>
+                    <div class="project-card">
+                        <div class="project-category">中转</div>
+                        <div class="project-count"><span contenteditable="true">520</span> <small>个项目</small></div>
+                        <a href="#" class="view-link">查看全部 →</a>
+                    </div>
+                </div>
+
+                <!-- 渠道卡片 (表格备注已设为红色大字) -->
+                <div class="channel-card">
+                    <div class="channel-header">
+                        <h3>📋 中转产品</h3>
+                        <div class="channel-tab-group" id="newChannelTabs">
+                            <button class="channel-tab active" data-target="pkg">仓储PKG</button>
+                            <button class="channel-tab" data-target="halara">全量halara</button>
+                            <button class="channel-tab" data-target="dfl">专线DFL</button>
+                            <button class="channel-tab" data-target="other">其他客户</button>
+                        </div>
+                    </div>
+                    <div class="table-wrap new-channel-tables">
+                        <!-- PKG表 -->
+                        <table id="pkg" class="channel-table active-table">
+                            <thead><tr><th>线路产品</th><th>中转产品</th><th>备注</th></tr></thead>
+                            <tbody>
+                                <tr><td>德国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国SK.DHL.清派.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>法国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">法国WD.CLM.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>法国普货CR</td><td class="copy-group"><span class="trans-text" contenteditable="true">法国WD.Cirro.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>欧盟普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">东欧Pactic.普</span><button class="copy-btn">复制</button></td><td>HU/PL/CZ</td></tr>
+                                <tr><td>葡萄牙普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">葡萄牙CTT.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>西班牙普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">西班牙CTT.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>西班牙西邮普货特快专线</td><td class="copy-group"><span class="trans-text" contenteditable="true">西班牙KParcel.西邮特快.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>英国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">英国(WD-Evri+UBI-RM).普</span><button class="copy-btn">复制</button></td><td>优先</td></tr>
+                                <tr><td></td><td class="copy-group"><span class="trans-text" contenteditable="true">英国UBI.RM.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td colspan="3">注：欧盟若新增其他国家，可参考专线</td></tr>
+                            </tbody>
+                        </table>
+                        <!-- halara表 -->
+                        <table id="halara" class="channel-table">
+                            <thead><tr><th>线路产品</th><th>中转产品</th><th>备注</th></tr></thead>
+                            <tbody>
+                                <tr><td>德国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国SK.DHL.清派.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>东欧普货专线_K</td><td class="copy-group"><span class="trans-text" contenteditable="true">东欧Pactic.普-Halara</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>法国普货专线</td><td class="copy-group"><span class="trans-text" contenteditable="true">法国WD.Cirro.普</span><button class="copy-btn">复制</button></td><td>单量50%</td></tr>
+                                <tr><td></td><td class="copy-group"><span class="trans-text" contenteditable="true">法国WD.CLM.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>荷兰普货专线</td><td class="copy-group"><span class="trans-text" contenteditable="true">荷兰SK.DHL.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>葡萄牙普货专线</td><td class="copy-group"><span class="trans-text" contenteditable="true">葡萄牙CTT.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>西班牙普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">西班牙CTT.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>西班牙西邮普货特快专线</td><td class="copy-group"><span class="trans-text" contenteditable="true">西班牙CTT.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>意大利普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">意大利快速SENGI.PI.FCO.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>英国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">英国UBI.RM.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                            </tbody>
+                        </table>
+                        <!-- dfl表 -->
+                        <table id="dfl" class="channel-table">
+                            <thead><tr><th>线路产品</th><th>中转产品</th><th>备注</th></tr></thead>
+                            <tbody>
+                                <tr><td>澳洲带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">澳洲ACAupost电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>澳洲普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">澳洲ACAupost普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>德国带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国SK.DHL本土.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>德国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国SK.DHL.清派.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>法国带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">法国WD.CLM.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>法国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">法国WD.Cirro.普</span><button class="copy-btn">复制</button></td><td>200票</td></tr>
+                                <tr><td></td><td class="copy-group"><span class="trans-text" contenteditable="true">法国WD.CLM.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>加拿大带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">加拿大CD电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>加拿大普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">加拿大CD特</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>罗马尼亚SAMEDAY普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">罗马尼亚Pactic.SAMEDAY.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>美国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">壹号美国直出USPS-F普货</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>欧盟带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国DHL国际带电专线</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>欧盟普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国DHL国际带电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td></td><td class="copy-group"><span class="trans-text" contenteditable="true">东欧Pactic.普</span><button class="copy-btn">复制</button></td><td>HU/PL/CZ</td></tr>
+                                <tr><td>葡萄牙带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">葡萄牙CTT.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>葡萄牙普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">葡萄牙CTT.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>西班牙带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">西班牙CTT.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>西班牙普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">西班牙CTT.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>意大利带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国DHL国际带电专线</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>意大利普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">意大利快速SENGI.PI.FCO.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>英国带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">英国(WD-Evri+UBI-RM).电</span><button class="copy-btn">复制</button></td><td>优先</td></tr>
+                                <tr><td></td><td class="copy-group"><span class="trans-text" contenteditable="true">英国UBI.RM.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>英国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">英国(WD-Evri+UBI-RM).普</span><button class="copy-btn">复制</button></td><td>优先</td></tr>
+                                <tr><td></td><td class="copy-group"><span class="trans-text" contenteditable="true">英国UBI.RM.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>广州EUB</td><td class="copy-group"><span class="trans-text" contenteditable="true">澳洲ACAupost电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                            </tbody>
+                        </table>
+                        <!-- other表 -->
+                        <table id="other" class="channel-table">
+                            <thead><tr><th>线路产品</th><th>中转产品</th><th>备注</th></tr></thead>
+                            <tbody>
+                                <tr><td>德国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国SK.DHL.清派.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>法国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">法国WD.CLM.普</span><button class="copy-btn">复制</button></td><td>禓耀法国先下cirro 失败转CLM</td></tr>
+                                <tr><td>英国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">英国UBI.RM.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>西班牙普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">西班牙CTT.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>西班牙西邮普货特快</td><td class="copy-group"><span class="trans-text" contenteditable="true">西班牙KParcel.西邮特快.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>葡萄牙普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">葡萄牙CTT.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>意大利普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">意大利快速SENGI.PI.FCO.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>加拿大普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">加拿大CD特</span><button class="copy-btn">复制</button></td><td>F类</td></tr>
+                                <tr><td></td><td class="copy-group"><span class="trans-text" contenteditable="true">加拿大CD普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>美国普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">壹号美国混合商派-F货</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>欧盟普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国DHL国际带电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td></td><td class="copy-group"><span class="trans-text" contenteditable="true">东欧Pactic.普</span><button class="copy-btn">复制</button></td><td>HU/PL/CZ</td></tr>
+                                <tr><td></td><td class="copy-group"><span class="trans-text" contenteditable="true">德国DHL国际普货专线</span><button class="copy-btn">复制</button></td><td>重量异常</td></tr>
+                                <tr><td>荷兰普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">荷兰SK.DHL.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>澳洲普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">澳洲ACAupost普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>罗马尼亚普货</td><td class="copy-group"><span class="trans-text" contenteditable="true">罗马尼亚Pactic.SAMEDAY.普</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>德国带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国SK.DHL本土.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>法国带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">法国WD.CLM.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>英国带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">英国UBI.RM.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>西班牙带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">西班牙CTT.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>葡萄牙带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">葡萄牙CTT.电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>意大利带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国DHL国际带电专线</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>加拿大带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">加拿大CD电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>欧盟带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">德国DHL国际带电专线</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>澳洲带电</td><td class="copy-group"><span class="trans-text" contenteditable="true">澳洲ACAupost电</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>奥地利</td><td class="copy-group"><span class="trans-text" contenteditable="true">奥地利GLS pacti</span><button class="copy-btn">复制</button></td><td></td></tr>
+                                <tr><td>法国马帮</td><td class="copy-group"><span class="trans-text" contenteditable="true">法国普货专线-w</span><button class="copy-btn">复制</button></td><td></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧列 (日历 + 日程 + 今日事件) -->
+            <div class="right-stack">
+                <!-- 日历卡片 (可点击切换月份) -->
+                <div class="calendar-card">
+                    <div class="calendar-header">
+                        <h3 id="calendar-month-year">2026年2月</h3>
+                        <div class="calendar-nav">
+                            <button id="prev-month">←</button>
+                            <button id="next-month">→</button>
+                        </div>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid">
+                        <!-- 日历将通过JS动态生成 -->
+                    </div>
+                    <div style="margin-top: 16px; font-size: 13px; color: #409eff;">📌 no问题</div>
+                </div>
+
+                <!-- 日程卡片 -->
+                <div class="schedule-card">
+                    <div style="font-weight:600; font-size:18px;">到货日志</div>
+                    <div class="schedule-hours">09:00 | 10:00 | 11:00 | 12:00 | 13:00 | 14:00 | 15:00</div>
+                    <div class="schedule-item"><span class="schedule-name">PKG</span> <span class="schedule-link">查看详情 →</span></div>
+                    <div class="schedule-item"><span class="schedule-name">halara</span> <span class="schedule-link">查看详情 →</span></div>
+                    <div class="schedule-item"><span class="schedule-name">DFL</span> <span class="schedule-link">查看详情 →</span></div>
+                    <div class="schedule-item"><span class="schedule-name">其他客户</span> <span class="schedule-link">查看详情 →</span></div>
+                </div>
+
+                <!-- 今日事件卡片 -->
+                <div class="today-card" style="background:white; border-radius:24px; padding:22px; border:1px solid #edf2f8;">
+                    <div style="display:flex; gap:20px; margin-bottom:20px;"><span>23周一</span><span>24周二</span><span>25周三</span><span>26周四</span><span>27周五</span><span>28周六</span></div>
+                    <div class="event-badge"><div><strong>食品应用概念</strong> <span style="float:right;">13:00</span></div><div class="event-time">UI设计</div></div>
+                    <div class="event-badge"><div><strong>着陆页完整插画</strong> <span style="float:right;">10:00</span></div><div class="event-time">UI设计</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 所有弹窗 ===== -->
+    <div class="modal-mask" id="modal-mask"></div>
+
+    <!-- 复测弹窗 -->
+    <div class="func-modal" id="recheck-modal">
+        <h3 class="modal-title">复测操作规范</h3>
+        <div class="modal-content">每天查看杭州到货，查看复测产品单号，然后去找到这个货\n一、拍下面单\n二、拍下测量的长宽高\n三、制作表格并发出</div>
+        <button class="close-modal" id="close-recheck">关闭</button>
+    </div>
+
+    <!-- 到货量查询弹窗 -->
+    <div class="func-modal" id="arrival-modal">
+        <h3 class="modal-title">其他客户到货量查询步骤</h3>
+        <div class="modal-content">一、在威狮系统选择快件清单\n二、选择收货时间，填当天时间\n三、查询并导出（快件数据）\n四、进入文档筛选客户编码，把以下3个选项不用选择：\n1.PKGUN01\n2.DFL001\n3.halara</div>
+        <button class="close-modal" id="close-arrival">关闭</button>
+    </div>
+
+    <!-- 异常类型弹窗 -->
+    <div class="func-modal" id="exception-modal">
+        <h3 class="modal-title">国际物流线路产品异常类型及解决办法</h3>
+        <div class="modal-content">
+            <div class="exception-item"><div class="exception-title">澳大利亚普货专线_K - 澳洲ACAupost特</div>1. 获取失败为空白：需在地址后面添加邮编<br>2. [120007:City and Postcode do not match]：城市与邮编不匹配</div>
+            <div class="exception-item"><div class="exception-title">德国带电专线 - 德国SK.DHL本土.电</div>400 Bad Request: {"code":400,"message":"channel internal error: packstation or postfiliale,name2 cannot be empty","data":{}}<br>异常原因：缺少邮局地址，需登记到仓库问题件群的威狮异常登记表</div>
+            <div class="exception-item"><div class="exception-title">德国普货专线 - 德国SK.DHL.清派.普</div>400 Bad Request: {"code":400,"message":"channel internal error: 无法从地址里面获取门牌号，请单独传门牌号","data":{}}<br>异常原因：门牌号没填<br>解决办法：地址有数字则复制到AI查询主门牌号；地址无数字则填「/」</div>
+            <div class="exception-item"><div class="exception-title">法国带电专线 - 法国WD.CLM.电</div>业务异常】地址校验拦截：地址校验失败：["城市与邮编不匹配"]<br>解决办法：用地图搜索（地址+城市+州/地址+城市+州+邮编/地址+邮编），需保证地址、城市、邮编三者至少两个匹配才可修改</div>
+        </div>
+        <button class="close-modal" id="close-exception">关闭</button>
+    </div>
+
+    <!-- 插图弹窗 (您指定的完整代码将放在此处) -->
+    <div class="func-modal" id="illustration-modal">
+        <div class="illustration-container">
+            <div class="illustration-left">
+                <div class="drop-area" id="dropArea">
+                    <div class="drop-icon">📂</div>
+                    <div>点击添加图片 或 拖拽到此区域</div>
+                    <div style="margin: 8px 0; color: #999; font-size: 13px;">支持 Ctrl / Shift 选择多张图片</div>
+                    <button class="illustration-btn" id="addImagesBtn">添加图片</button>
+                    <button class="illustration-btn clear-btn" id="clearImagesBtn" style="margin-top: 8px;">清空图片</button>
+                    <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+                </div>
+                <div id="preview-container">
+                    <div class="preview-header">
+                        <div class="preview-title">表格预览（ ）</div>
+                        <div class="preview-stats" id="preview-stats">已选择：0 张图片</div>
+                    </div>
+                    <div id="preview-content"><div class="no-preview">暂无预览内容<br>请添加图片并点击「开始插入」生成预览</div></div>
+                </div>
+                <div class="tip">提示：单元格尺寸已设为 ，图片将精准填满</div>
+            </div>
+            <div class="illustration-right">
+                <div class="section"><div class="section-title">插入方式</div>
+                    <div class="radio-group">
+                        <label class="radio-item"><input type="radio" name="insertMode" value="embed" checked> 嵌入</label>
+                        <label class="radio-item"><input type="radio" name="insertMode" value="float"> 浮于单元格</label>
+                    </div>
+                </div>
+                <div class="section"><div class="section-title">起始单元格</div><input type="text" id="startCell" value="A1" placeholder="如: A1"></div>
+                <div class="section"><div class="section-title">排列方向</div>
+                    <div class="radio-group">
+                        <label class="radio-item"><input type="radio" name="layout" value="vertical"> 按列竖排</label>
+                        <label class="radio-item"><input type="radio" name="layout" value="horizontal" checked> 按行横排</label>
+                    </div>
+                    <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+                        <span>每行/每列</span>
+                        <input type="number" id="perRow" value="4" min="1" style="width: 80px;">
+                        <span>张</span>
+                    </div>
+                </div>
+                <div class="section"><div class="section-title">单元格尺寸（厘米）</div>
+                    <div class="unit-switch">
+                        <button id="unit-cm" class="active">厘米(cm)</button>
+                        <button id="unit-px">像素(px)</button>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                        <div style="flex: 1;"><label>宽度</label><input type="number" id="cellWidth" value="4.12" min="0.5" max="20" step="0.01"></div>
+                        <div style="flex: 1;"><label>高度</label><input type="number" id="cellHeight" value="4.74" min="0.5" max="20" step="0.01"></div>
+                    </div>
+                    <div class="config-tip" id="unit-tip"> </div>
+                </div>
+                <div class="section"><div class="section-title">添加图片名</div>
+                    <div class="radio-group">
+                        <label class="radio-item"><input type="radio" name="addName" value="none" checked> 不添加</label>
+                        <label class="radio-item"><input type="radio" name="addName" value="below"> 图片下方（单独行）</label>
+                        <label class="radio-item"><input type="radio" name="addName" value="above"> 图片上方（单独行）</label>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="start-btn" id="startInsert">开始插入</button>
+                    <button class="export-btn" id="exportExcelBtn">导出Excel</button>
+                    <button class="refresh-preview-btn" id="refreshPreviewBtn">刷新预览</button>
+                </div>
+            </div>
+        </div>
+        <button class="close-modal" id="close-illustration" style="margin-top:15px;">关闭</button>
+    </div>
+
+    <!-- 进度条弹窗 -->
+    <div id="progress-modal">
+        <div class="progress-container">
+            <div class="progress-title">正在导出Excel文件...</div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <div class="progress-text" id="progress-text">0% - 准备中...</div>
+        </div>
+    </div>
+
+    <button class="back-top" id="back-top">↑ 回到顶部</button>
+
+    <!-- 完整功能JavaScript -->
+    <script>
+        (function() {
+            // ========== 渠道切换 ==========
+            const channelTabs = document.querySelectorAll('#newChannelTabs .channel-tab');
+            const tables = {
+                pkg: document.getElementById('pkg'),
+                halara: document.getElementById('halara'),
+                dfl: document.getElementById('dfl'),
+                other: document.getElementById('other')
+            };
+
+            function switchTable(targetId) {
+                Object.values(tables).forEach(table => {
+                    if (table) table.classList.remove('active-table');
+                });
+                if (tables[targetId]) tables[targetId].classList.add('active-table');
+                channelTabs.forEach(tab => {
+                    const tabTarget = tab.getAttribute('data-target');
+                    if (tabTarget === targetId) tab.classList.add('active');
+                    else tab.classList.remove('active');
+                });
+            }
+
+            channelTabs.forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('data-target');
+                    if (targetId) switchTable(targetId);
+                });
+            });
+            switchTable('pkg');
+
+            // ========== 实时时钟 ==========
+            function updateClock() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2,'0');
+                const day = String(now.getDate()).padStart(2,'0');
+                const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+                const weekday = weekdays[now.getDay()];
+                const hours = String(now.getHours()).padStart(2,'0');
+                const minutes = String(now.getMinutes()).padStart(2,'0');
+                const seconds = String(now.getSeconds()).padStart(2,'0');
+                const clockEl = document.getElementById('liveClock');
+                if (clockEl) {
+                    clockEl.innerHTML = `⏱️ ${year}.${month}.${day} ${weekday} ${hours}:${minutes}:${seconds}`;
+                }
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            // ========== 可切换日历 ==========
+            let currentDate = new Date(2026, 1, 1); // 2026年2月1日
+            const monthYearEl = document.getElementById('calendar-month-year');
+            const calendarGrid = document.getElementById('calendar-grid');
+            const prevBtn = document.getElementById('prev-month');
+            const nextBtn = document.getElementById('next-month');
+
+            function renderCalendar() {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // 周一为0
+                const totalDays = lastDay.getDate();
+                
+                monthYearEl.textContent = `${year}年${month + 1}月`;
+                
+                let html = '';
+                const weekdays = ['一','二','三','四','五','六','日'];
+                weekdays.forEach(d => html += `<div class="weekday">${d}</div>`);
+                
+                // 填充空白
+                for (let i = 0; i < startDayOfWeek; i++) {
+                    html += `<div class="calendar-day"></div>`;
+                }
+                
+                // 填充日期
+                const today = new Date();
+                for (let d = 1; d <= totalDays; d++) {
+                    const date = new Date(year, month, d);
+                    let className = 'calendar-day';
+                    if (date.toDateString() === today.toDateString()) className += ' today';
+                    html += `<div class="${className}">${d}</div>`;
+                }
+                calendarGrid.innerHTML = html;
+            }
+            
+            if (prevBtn && nextBtn) {
+                prevBtn.addEventListener('click', () => {
+                    currentDate.setMonth(currentDate.getMonth() - 1);
+                    renderCalendar();
+                });
+                nextBtn.addEventListener('click', () => {
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                    renderCalendar();
+                });
+            }
+            renderCalendar();
+
+            // ========== 其他功能按钮 ==========
+            const transOrderBtn = document.getElementById('trans-order');
+            const zipSearchBtn = document.getElementById('zip-search');
+            const channelSearchBtn = document.getElementById('channel-search');
+            const nameRegisterBtn = document.getElementById('name-register');
+            const recheckBtn = document.getElementById('recheck');
+            const checkArrivalBtn = document.getElementById('check-arrival');
+            const exceptionTypeBtn = document.getElementById('exception-type');
+            const illustrationBtn = document.getElementById('illustration');
+            const zipSubgroup = document.getElementById('zip-subgroup');
+            const backTop = document.getElementById('back-top');
+            const modalMask = document.getElementById('modal-mask');
+            const recheckModal = document.getElementById('recheck-modal');
+            const arrivalModal = document.getElementById('arrival-modal');
+            const exceptionModal = document.getElementById('exception-modal');
+            const illustrationModal = document.getElementById('illustration-modal');
+            const closeRecheck = document.getElementById('close-recheck');
+            const closeArrival = document.getElementById('close-arrival');
+            const closeException = document.getElementById('close-exception');
+            const closeIllustration = document.getElementById('close-illustration');
+            const zipBtn1 = document.getElementById('zip-btn1');
+            const zipBtn2 = document.getElementById('zip-btn2');
+
+            // 转单
+            if (transOrderBtn) {
+                transOrderBtn.addEventListener('click', () => {
+                    window.open('http://120.77.151.112:16321/module/index?mv=index', '_blank');
+                    if (zipSubgroup) zipSubgroup.style.display = 'none';
+                });
+            }
+
+            // 异常登记
+            if (nameRegisterBtn) {
+                nameRegisterBtn.addEventListener('click', () => {
+                    window.open('https://doc.weixin.qq.com/sheet/e3_AYIASAYIAIw0t7m5oMlSIm4JaBk0e?scode=AGMAxAeNAHYWBBxTkl');
+                    if (zipSubgroup) zipSubgroup.style.display = 'none';
+                    closeAllModal();
+                });
+            }
+
+            // 复测
+            if (recheckBtn) {
+                recheckBtn.addEventListener('click', () => {
+                    if (modalMask) modalMask.classList.add('show');
+                    if (recheckModal) recheckModal.classList.add('show');
+                    if (zipSubgroup) zipSubgroup.style.display = 'none';
+                });
+            }
+
+            // 到货量
+            if (checkArrivalBtn) {
+                checkArrivalBtn.addEventListener('click', () => {
+                    if (modalMask) modalMask.classList.add('show');
+                    if (arrivalModal) arrivalModal.classList.add('show');
+                    if (zipSubgroup) zipSubgroup.style.display = 'none';
+                });
+            }
+
+            // 异常类型
+            if (exceptionTypeBtn) {
+                exceptionTypeBtn.addEventListener('click', () => {
+                    if (modalMask) modalMask.classList.add('show');
+                    if (exceptionModal) exceptionModal.classList.add('show');
+                    if (zipSubgroup) zipSubgroup.style.display = 'none';
+                });
+            }
+
+            // 插图
+            if (illustrationBtn) {
+                illustrationBtn.addEventListener('click', () => {
+                    if (modalMask) modalMask.classList.add('show');
+                    if (illustrationModal) illustrationModal.classList.add('show');
+                    if (zipSubgroup) zipSubgroup.style.display = 'none';
+                });
+            }
+
+            // 关闭所有弹窗
+            function closeAllModal() {
+                if (modalMask) modalMask.classList.remove('show');
+                if (recheckModal) recheckModal.classList.remove('show');
+                if (arrivalModal) arrivalModal.classList.remove('show');
+                if (exceptionModal) exceptionModal.classList.remove('show');
+                if (illustrationModal) illustrationModal.classList.remove('show');
+            }
+            
+            if (closeRecheck) closeRecheck.addEventListener('click', closeAllModal);
+            if (closeArrival) closeArrival.addEventListener('click', closeAllModal);
+            if (closeException) closeException.addEventListener('click', closeAllModal);
+            if (closeIllustration) closeIllustration.addEventListener('click', closeAllModal);
+            if (modalMask) modalMask.addEventListener('click', closeAllModal);
+
+            // 邮政编码切换
+            if (zipSearchBtn) {
+                zipSearchBtn.addEventListener('click', () => {
+                    if (zipSubgroup) {
+                        zipSubgroup.style.display = zipSubgroup.style.display === 'flex' ? 'none' : 'flex';
+                    }
+                    closeAllModal();
+                });
+            }
+            
+            if (zipBtn1) {
+                zipBtn1.addEventListener('click', () => {
+                    window.open('https://cn.bing.com/maps/search?setmkt=en-US&setlang=en-US&q=35+Radisich+Loop+Oran+Park+New+South+Wales&cp=rg14ythx8k5g&lvl=16.7', '_blank');
+                });
+            }
+            
+            if (zipBtn2) {
+                zipBtn2.addEventListener('click', () => {
+                    window.open('https://www.nowmsg.com/findzip/fr_postal_code.asp', '_blank');
+                });
+            }
+
+            // 渠道查询 - 平滑滚动
+            if (channelSearchBtn) {
+                channelSearchBtn.addEventListener('click', () => {
+                    document.querySelector('.channel-card')?.scrollIntoView({ behavior: 'smooth' });
+                    if (zipSubgroup) zipSubgroup.style.display = 'none';
+                    closeAllModal();
+                });
+            }
+
+            // 复制功能
+            const copyBtns = document.querySelectorAll('.copy-btn');
+            copyBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const textEl = this.closest('td')?.querySelector('.trans-text');
+                    if (textEl) {
+                        const text = textEl.textContent.trim();
+                        navigator.clipboard.writeText(text).then(() => {
+                            alert('复制成功: ' + text);
+                        }).catch(() => alert('复制失败，但可手动复制'));
+                    }
+                });
+            });
+
+            // 回到顶部
+            window.addEventListener('scroll', () => {
+                if (backTop) backTop.style.display = window.scrollY > 300 ? 'block' : 'none';
+            });
+            if (backTop) {
+                backTop.addEventListener('click', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            // ========== 您指定的插图功能完整代码（原样放回） ==========
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            const addImagesBtn = document.getElementById('addImagesBtn');
+            const clearImagesBtn = document.getElementById('clearImagesBtn');
+            const startInsertBtn = document.getElementById('startInsert');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            const refreshPreviewBtn = document.getElementById('refreshPreviewBtn');
+            const previewContent = document.getElementById('preview-content');
+            const previewStats = document.getElementById('preview-stats');
+            const unitCmBtn = document.getElementById('unit-cm');
+            const unitPxBtn = document.getElementById('unit-px');
+            const cellWidthInput = document.getElementById('cellWidth');
+            const cellHeightInput = document.getElementById('cellHeight');
+            const unitTip = document.getElementById('unit-tip');
+            const progressModal = document.getElementById('progress-modal');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+
+            let selectedFiles = [];
+            let imageBase64List = [];
+            let currentUnit = 'cm';
+            const CM_TO_PX = 28.35;
+            const CM_TO_EXCEL_COL = 3.78;
+            const CM_TO_EXCEL_ROW = 21.59;
+            const EXCEL_COORD_COEFF = 80;
+
+            // 单位切换事件
+            if (unitCmBtn) {
+                unitCmBtn.addEventListener('click', () => {
+                    currentUnit = 'cm';
+                    unitCmBtn.classList.add('active');
+                    if (unitPxBtn) unitPxBtn.classList.remove('active');
+                    const widthPx = parseFloat(cellWidthInput.value);
+                    const heightPx = parseFloat(cellHeightInput.value);
+                    if (!isNaN(widthPx) && !isNaN(heightPx)) {
+                        cellWidthInput.value = (widthPx / CM_TO_PX).toFixed(2);
+                        cellHeightInput.value = (heightPx / CM_TO_PX).toFixed(2);
+                    }
+                    updateUnitTip();
+                });
+            }
+
+            if (unitPxBtn) {
+                unitPxBtn.addEventListener('click', () => {
+                    currentUnit = 'px';
+                    unitPxBtn.classList.add('active');
+                    if (unitCmBtn) unitCmBtn.classList.remove('active');
+                    const widthCm = parseFloat(cellWidthInput.value);
+                    const heightCm = parseFloat(cellHeightInput.value);
+                    if (!isNaN(widthCm) && !isNaN(heightCm)) {
+                        cellWidthInput.value = Math.round(widthCm * CM_TO_PX);
+                        cellHeightInput.value = Math.round(heightCm * CM_TO_PX);
+                    }
+                    updateUnitTip();
+                });
+            }
+
+            function updateUnitTip() {
+                let widthCm, heightCm, widthPx, heightPx;
+                if (currentUnit === 'cm') {
+                    widthCm = parseFloat(cellWidthInput.value) || 4.12;
+                    heightCm = parseFloat(cellHeightInput.value) || 4.74;
+                    widthPx = Math.round(widthCm * CM_TO_PX * 10) / 10;
+                    heightPx = Math.round(heightCm * CM_TO_PX * 10) / 10;
+                } else {
+                    widthPx = parseFloat(cellWidthInput.value) || 116.8;
+                    heightPx = parseFloat(cellHeightInput.value) || 134.4;
+                    widthCm = Math.round((widthPx / CM_TO_PX) * 100) / 100;
+                    heightCm = Math.round((heightPx / CM_TO_PX) * 100) / 100;
+                }
+                if (unitTip) unitTip.textContent = `当前：${widthCm}cm×${heightCm}cm ≈ ${widthPx}px×${heightPx}px`;
+            }
+
+            if (cellWidthInput) cellWidthInput.addEventListener('input', updateUnitTip);
+            if (cellHeightInput) cellHeightInput.addEventListener('input', updateUnitTip);
+
+            if (addImagesBtn) {
+                addImagesBtn.addEventListener('click', () => {
+                    if (fileInput) {
+                        fileInput.value = '';
+                        fileInput.click();
+                    }
+                });
+            }
+
+            if (clearImagesBtn) {
+                clearImagesBtn.addEventListener('click', () => {
+                    selectedFiles = [];
+                    imageBase64List = [];
+                    updatePreviewStats();
+                    if (previewContent) {
+                        previewContent.innerHTML = `
+                            <div class="no-preview">
+                                暂无预览内容<br>请添加图片并点击「开始插入」生成预览
+                            </div>
+                        `;
+                    }
+                    alert('已清空所有选择的图片！');
+                });
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', async function(e) {
+                    try {
+                        const files = Array.from(this.files || []);
+                        if (files.length === 0) return;
+                        const imageFiles = files.filter(f => f.type && f.type.startsWith('image/'));
+                        if (imageFiles.length === 0) {
+                            alert('请选择有效的图片文件（jpg、png、gif等）！');
+                            return;
+                        }
+                        const newFiles = [];
+                        for (const file of imageFiles) {
+                            const isDuplicate = selectedFiles.some(f => 
+                                f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
+                            );
+                            if (!isDuplicate) {
+                                selectedFiles.push(file);
+                                newFiles.push(file);
+                                const base64 = await fileToBase64(file);
+                                imageBase64List.push({
+                                    name: file.name,
+                                    type: file.type,
+                                    data: base64
+                                });
+                            }
+                        }
+                        updatePreviewStats();
+                        alert(`成功添加 ${newFiles.length} 张图片，当前共选择 ${selectedFiles.length} 张`);
+                        generatePreview();
+                    } catch (error) {
+                        console.error('处理图片失败：', error);
+                        alert('添加图片失败，请重试！');
+                    }
+                });
+            }
+
+            if (dropArea) {
+                dropArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropArea.classList.add('dragover');
+                });
+
+                dropArea.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropArea.classList.remove('dragover');
+                });
+
+                dropArea.addEventListener('drop', async (e) => {
+                    try {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropArea.classList.remove('dragover');
+                        const files = Array.from(e.dataTransfer.files || []);
+                        if (files.length === 0) return;
+                        const imageFiles = files.filter(f => f.type && f.type.startsWith('image/'));
+                        if (imageFiles.length === 0) {
+                            alert('请拖拽图片文件！');
+                            return;
+                        }
+                        const newFiles = [];
+                        for (const file of imageFiles) {
+                            const isDuplicate = selectedFiles.some(f => 
+                                f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
+                            );
+                            if (!isDuplicate) {
+                                selectedFiles.push(file);
+                                newFiles.push(file);
+                                const base64 = await fileToBase64(file);
+                                imageBase64List.push({
+                                    name: file.name,
+                                    type: file.type,
+                                    data: base64
+                                });
+                            }
+                        }
+                        updatePreviewStats();
+                        alert(`成功添加 ${newFiles.length} 张图片，当前共选择 ${selectedFiles.length} 张`);
+                        generatePreview();
+                    } catch (error) {
+                        console.error('拖拽图片失败：', error);
+                        alert('拖拽添加图片失败，请重试！');
+                    }
+                });
+            }
+
+            if (startInsertBtn) startInsertBtn.addEventListener('click', generatePreview);
+            if (refreshPreviewBtn) refreshPreviewBtn.addEventListener('click', generatePreview);
+            if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportToExcelWithProgress);
+
+            function updatePreviewStats() {
+                if (previewStats) previewStats.textContent = `已选择：${selectedFiles.length} 张图片`;
+            }
+
+            function getCellSizeInPx() {
+                let width, height;
+                if (currentUnit === 'cm') {
+                    width = parseFloat(cellWidthInput.value) || 4.12;
+                    height = parseFloat(cellHeightInput.value) || 4.74;
+                    return { width: width * CM_TO_PX, height: height * CM_TO_PX };
+                } else {
+                    width = parseFloat(cellWidthInput.value) || 116.8;
+                    height = parseFloat(cellHeightInput.value) || 134.4;
+                    return { width, height };
+                }
+            }
+
+            function generatePreview() {
+                if (selectedFiles.length === 0) {
+                    alert('请先选择图片！');
+                    return;
+                }
+                try {
+                    const config = getCurrentConfig();
+                    const table = document.createElement('table');
+                    table.id = 'preview-table';
+                    const perRow = config.perRow;
+                    const totalImages = selectedFiles.length;
+                    const totalRows = config.layout === 'horizontal' ? Math.ceil(totalImages / perRow) : perRow;
+                    const totalCols = config.layout === 'horizontal' ? perRow : Math.ceil(totalImages / perRow);
+                    const cellSize = getCellSizeInPx();
+                    const cellWidth = cellSize.width;
+                    const cellHeight = cellSize.height;
+                    let fileIndex = 0;
+                    const startPos = parseCellAddress(config.startCell);
+                    let currentRow = startPos.row;
+                    let currentCol = startPos.col;
+                    for (let r = 0; r < totalRows; r++) {
+                        const tr = document.createElement('tr');
+                        const rowHeight = cellHeight + (config.addName !== 'none' ? 20 : 0);
+                        tr.style.height = `${rowHeight}px`;
+                        for (let c = 0; c < totalCols; c++) {
+                            const td = document.createElement('td');
+                            td.style.width = `${cellWidth}px`;
+                            td.style.height = `${cellHeight}px`;
+                            const cellAddr = getCellAddress(currentRow, currentCol);
+                            td.setAttribute('data-cell', cellAddr);
+                            if (fileIndex < totalImages) {
+                                const file = selectedFiles[fileIndex];
+                                const url = URL.createObjectURL(file);
+                                const cellContainer = document.createElement('div');
+                                cellContainer.style.display = 'flex';
+                                cellContainer.style.flexDirection = 'column';
+                                cellContainer.style.height = '100%';
+                                if (config.addName === 'above') {
+                                    const nameDiv = document.createElement('div');
+                                    nameDiv.className = 'file-name-label';
+                                    nameDiv.textContent = file.name;
+                                    cellContainer.appendChild(nameDiv);
+                                }
+                                const imgWrapper = document.createElement('div');
+                                imgWrapper.style.flex = 1;
+                                imgWrapper.style.overflow = 'hidden';
+                                const img = document.createElement('img');
+                                img.src = url;
+                                img.alt = file.name;
+                                img.style.width = '100%';
+                                img.style.height = '100%';
+                                img.style.objectFit = 'cover';
+                                imgWrapper.appendChild(img);
+                                cellContainer.appendChild(imgWrapper);
+                                if (config.addName === 'below') {
+                                    const nameDiv = document.createElement('div');
+                                    nameDiv.className = 'file-name-label';
+                                    nameDiv.textContent = file.name;
+                                    cellContainer.appendChild(nameDiv);
+                                }
+                                td.appendChild(cellContainer);
+                                fileIndex++;
+                            } else {
+                                td.style.backgroundColor = '#f8f8f8';
+                                const emptyDiv = document.createElement('div');
+                                emptyDiv.style.color = '#ccc';
+                                emptyDiv.style.fontSize = '12px';
+                                emptyDiv.style.display = 'flex';
+                                emptyDiv.style.alignItems = 'center';
+                                emptyDiv.style.justifyContent = 'center';
+                                emptyDiv.style.height = '100%';
+                                emptyDiv.textContent = cellAddr;
+                                td.appendChild(emptyDiv);
+                            }
+                            tr.appendChild(td);
+                            currentCol++;
+                        }
+                        table.appendChild(tr);
+                        currentRow++;
+                        currentCol = startPos.col;
+                    }
+                    if (previewContent) {
+                        previewContent.innerHTML = '';
+                        previewContent.appendChild(table);
+                        const previewNote = document.createElement('div');
+                        previewNote.className = 'tip';
+                        const size = getCellSizeInPx();
+                        const cmWidth = (size.width / CM_TO_PX).toFixed(2);
+                        const cmHeight = (size.height / CM_TO_PX).toFixed(2);
+                        previewNote.innerHTML = `
+                            预览配置：${config.layout === 'horizontal' ? '按行横排' : '按列竖排'} | 
+                            每行${config.perRow}张 | 
+                            单元格尺寸${cmWidth}cm×${cmHeight}cm (${Math.round(size.width)}px×${Math.round(size.height)}px) | 
+                            图片名：${config.addName === 'none' ? '不显示' : (config.addName === 'above' ? '上方显示' : '下方显示')}
+                        `;
+                        previewContent.appendChild(previewNote);
+                    }
+                } catch (error) {
+                    console.error('生成预览失败：', error);
+                    alert('生成预览失败，请检查控制台！');
+                }
+            }
+
+            function getCurrentConfig() {
+                return {
+                    insertMode: document.querySelector('input[name="insertMode"]:checked')?.value || 'embed',
+                    startCell: document.getElementById('startCell')?.value.trim() || 'A1',
+                    layout: document.querySelector('input[name="layout"]:checked')?.value || 'horizontal',
+                    perRow: parseInt(document.getElementById('perRow')?.value) || 4,
+                    addName: document.querySelector('input[name="addName"]:checked')?.value || 'none'
+                };
+            }
+
+            function parseCellAddress(address) {
+                address = address.toUpperCase().replace(/\s/g, '');
+                const colMatch = address.match(/[A-Z]+/);
+                const rowMatch = address.match(/\d+/);
+                let col = 0;
+                if (colMatch) {
+                    const colStr = colMatch[0];
+                    for (let i = 0; i < colStr.length; i++) {
+                        col = col * 26 + (colStr.charCodeAt(i) - 65);
+                    }
+                }
+                const row = rowMatch ? parseInt(rowMatch[0]) - 1 : 0;
+                return { row, col };
+            }
+
+            function getCellAddress(row, col) {
+                let colStr = '';
+                let c = col;
+                do {
+                    colStr = String.fromCharCode(65 + (c % 26)) + colStr;
+                    c = Math.floor(c / 26) - 1;
+                } while (c >= 0);
+                const rowStr = (row + 1).toString();
+                return colStr + rowStr;
+            }
+
+            function fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const base64 = e.target.result.split(',')[1];
+                            resolve(base64);
+                        } catch (err) {
+                            reject(err);
+                        }
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            function updateProgress(percent, text) {
+                if (progressFill) progressFill.style.width = `${percent}%`;
+                if (progressText) progressText.textContent = `${Math.round(percent)}% - ${text}`;
+            }
+
+            async function exportToExcelWithProgress() {
+                if (selectedFiles.length === 0 || imageBase64List.length === 0) {
+                    alert('请先选择图片！');
+                    return;
+                }
+                if (progressModal) progressModal.style.display = 'flex';
+                updateProgress(0, '初始化Excel工作簿...');
+                try {
+                    const config = getCurrentConfig();
+                    const workbook = new ExcelJS.Workbook();
+                    const worksheet = workbook.addWorksheet('LOT复测');
+                    const perRow = config.perRow;
+                    const addName = config.addName;
+                    const layout = config.layout;
+                    const cellSizePx = getCellSizeInPx();
+                    const cellWidthCm = cellSizePx.width / CM_TO_PX;
+                    const cellHeightCm = cellSizePx.height / CM_TO_PX;
+                    const excelColWidth = Math.round(cellWidthCm * CM_TO_EXCEL_COL * 100) / 100;
+                    const excelRowHeight = Math.round(cellHeightCm * CM_TO_EXCEL_ROW * 100) / 100;
+                    const nameRowHeight = 25;
+                    const startPos = parseCellAddress(config.startCell);
+                    let currentRow = startPos.row + 1;
+                    let currentCol = startPos.col + 1;
+                    const totalSteps = imageBase64List.length * 3;
+                    let currentStep = 0;
+                    for (let i = 0; i < imageBase64List.length; i++) {
+                        const imgData = imageBase64List[i];
+                        currentStep++;
+                        updateProgress((currentStep / totalSteps) * 100, `处理图片 ${i+1}/${imageBase64List.length}`);
+                        worksheet.getColumn(currentCol).width = excelColWidth;
+                        worksheet.getRow(currentRow).height = excelRowHeight;
+                        if (addName === 'above') {
+                            const nameCell = worksheet.getCell(currentRow, currentCol);
+                            nameCell.value = imgData.name;
+                            nameCell.font = { size: 10 };
+                            nameCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                            worksheet.getRow(currentRow).height = nameRowHeight;
+                            currentRow++;
+                            worksheet.getRow(currentRow).height = excelRowHeight;
+                        }
+                        currentStep++;
+                        updateProgress((currentStep / totalSteps) * 100, `插入图片 ${i+1}/${imageBase64List.length}`);
+                        const imageId = workbook.addImage({
+                            base64: imgData.data,
+                            extension: imgData.type.split('/')[1] || 'png'
+                        });
+                        const imagePosition = {
+                            tl: { col: currentCol - 1, row: currentRow - 1 },
+                            br: { col: (currentCol - 1) + (cellSizePx.width / EXCEL_COORD_COEFF), row: (currentRow - 1) + (cellSizePx.height / EXCEL_COORD_COEFF) }
+                        };
+                        worksheet.addImage(imageId, imagePosition);
+                        if (addName === 'below') {
+                            currentRow++;
+                            const nameCell = worksheet.getCell(currentRow, currentCol);
+                            nameCell.value = imgData.name;
+                            nameCell.font = { size: 10 };
+                            nameCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                            worksheet.getRow(currentRow).height = nameRowHeight;
+                        }
+                        currentStep++;
+                        updateProgress((currentStep / totalSteps) * 100, `排版完成 ${i+1}/${imageBase64List.length}`);
+                        if (layout === 'horizontal') {
+                            currentCol++;
+                            if ((i + 1) % perRow === 0) {
+                                const moveDown = addName === 'above' || addName === 'below' ? 2 : 1;
+                                currentRow += moveDown;
+                                currentCol = startPos.col + 1;
+                            }
+                        } else {
+                            const moveDown = addName === 'above' || addName === 'below' ? 2 : 1;
+                            currentRow += moveDown;
+                            if ((i + 1) % perRow === 0) {
+                                currentCol++;
+                                currentRow = startPos.row + 1;
+                            }
+                        }
+                    }
+                    updateProgress(90, '生成Excel文件...');
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    updateProgress(95, '准备下载...');
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    if (typeof saveAs !== 'undefined') {
+                        saveAs(blob, `LOT复测`);
+                    } else {
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = `嵌入_${cellWidthCm.toFixed(2)}x${cellHeightCm.toFixed(2)}cm.xlsx`;
+                        link.click();
+                    }
+                    updateProgress(100, '导出完成！');
+                    setTimeout(() => {
+                        if (progressModal) progressModal.style.display = 'none';
+                        alert(`✅ 导出成功！\n共导出 ${selectedFiles.length} 张图片\n单元格尺寸：${cellWidthCm.toFixed(2)}cm × ${cellHeightCm.toFixed(2)}cm\n图片`);
+                    }, 500);
+                } catch (error) {
+                    console.error('导出Excel失败：', error);
+                    if (progressModal) progressModal.style.display = 'none';
+                    alert(`导出失败：${error.message}\n请查看控制台获取详细信息`);
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
